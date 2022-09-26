@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  username String @unique
+  email String @unique
+  hash String
+
+  submitments Submitment[]
+}
+
+model Submitment {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  code String
+  language String
+  userId Int
+  problemId Int
+  
+  problem Problem @relation(fields: [problemId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("submitment")
+}
+
+model Testcase {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  number Int
+  input String
+  expectedOutput String
+  score Int @default(0)
+
+  // TODO check relations
+  problemId Int
+  problem Problem @relation(fields: [problemId], references: [id])
+
+  @@map("testcase")
+}
+
+model Problem {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  name String @unique
+  description String
+  attachment String
+  template String?
+
+  // TODO check relations
+  testcaseList Testcase[]
+  submitments Submitment[]
+
+  @@map("problem")
+}
