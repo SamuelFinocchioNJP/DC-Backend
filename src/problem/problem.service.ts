@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException, NotFoundException, Unprocessa
 import { ProblemDto } from './data-transfer-objects';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { Problem } from '@prisma/client';
 
 @Injectable({})
 export class ProblemService {
@@ -26,7 +27,7 @@ export class ProblemService {
     throw new InternalServerErrorException("Unhandled error");
   }
 
-  async findMany() {
+  async findMany(): Promise<Problem[]> {
     return await this.prisma.problem.findMany();
   }
 
@@ -47,12 +48,22 @@ export class ProblemService {
     const problem = await this.prisma.problem.findUnique({
       where: { id },
       include: {
-        testcaseList: true,
+        testcaseList: {
+          where: {
+            number: {
+              in: [1, 2]
+            }
+          }
+        },
       }
     });
 
     if (!problem) {
       throw new NotFoundException('Problem does not exist');
+    }
+
+    if (!problem.isCoding) {
+      problem.testcaseList = [];
     }
 
     return problem;

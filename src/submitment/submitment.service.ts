@@ -22,7 +22,7 @@ export class SubmitmentService {
       }
     });
 
-    if(!problem) {
+    if (!problem) {
       throw new BadRequestException("Problem does not exist");
     }
 
@@ -30,25 +30,36 @@ export class SubmitmentService {
     const report = [];
     let overallScore = 0;
     for (let testcase of problem.testcaseList) {
-      const result = await this.pistonClient.execute(data.language, data.code, {
-        stdin: testcase.input,
-      });
+      if (problem.isCoding) {
+        const result = await this.pistonClient.execute(data.language, data.code, {
+          stdin: testcase.input,
+        });
 
-      console.info("Piston Outcome:", result)
-      const outcomeStdout = result.run.stdout.trim();
+        console.info("Piston Outcome:", result)
+        const outcomeStdout = result.run.stdout.trim();
 
-      report.push({
-        score: testcase.score * +(testcase.expectedOutput === outcomeStdout),
-        stdout: outcomeStdout,
-        outcome: testcase.expectedOutput === outcomeStdout
-      }); 
-      
-      overallScore += testcase.score * +(testcase.expectedOutput === outcomeStdout);
+        report.push({
+          score: testcase.score * +(testcase.expectedOutput === outcomeStdout),
+          stdout: outcomeStdout,
+          outcome: testcase.expectedOutput === outcomeStdout
+        });
+
+        overallScore += testcase.score * +(testcase.expectedOutput === outcomeStdout);
+      } else {
+        const outcomeStdout = data.code.trim();
+        report.push({
+          score: testcase.score * +(testcase.expectedOutput === outcomeStdout),
+          stdout: outcomeStdout,
+          outcome: testcase.expectedOutput === outcomeStdout
+        });
+
+        overallScore += testcase.score * +(testcase.expectedOutput === outcomeStdout);
+      }
     }
 
     try {
       data.report = JSON.stringify(report);
-      data.score =  overallScore;
+      data.score = overallScore;
 
       const submitment = await this.prisma.submitment.create({
         data: data,

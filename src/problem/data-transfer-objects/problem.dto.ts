@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, isJSON, IsJSON, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class ProblemDto {
   @IsString()
@@ -16,4 +16,12 @@ export class ProblemDto {
   @IsString()
   @IsOptional()
   template?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isCoding: boolean;
+
+  @IsArray()
+  @IsOptional()
+  availableLanguages: string[];
 }

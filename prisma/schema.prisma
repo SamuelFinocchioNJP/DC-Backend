@@ -66,6 +66,8 @@ model Problem {
   description String
   attachment String
   template String?
+  isCoding Boolean @default(false)
+  availableLanguages Json @default("[\"plain\"]")
 
   // TODO check relations
   testcaseList Testcase[]
