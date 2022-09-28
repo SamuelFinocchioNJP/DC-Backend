@@ -1,21 +1,55 @@
-import { Injectable, InternalServerErrorException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { SubmitmentDto } from './data-transfer-objects';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import piston from 'src/libs/piston-client/piston';
 
 @Injectable({})
 export class SubmitmentService {
-  constructor(private prisma: PrismaService) { }
+  private pistonClient;
+
+  constructor(private prisma: PrismaService) {
+    this.pistonClient = piston({ server: "https://emkc.org" });
+  }
 
   async create(data: SubmitmentDto) {
-    // const client = piston({ server: "https://emkc.org" });
+    // const runtimes = await this.pistonClient.runtimes();
 
-    // const runtimes = await client.runtimes();
-    // // [{ language: 'python', version: '3.9.4', aliases: ['py'] }, ...]
+    const problem = await this.prisma.problem.findUnique({
+      where: { id: data.problemId },
+      include: {
+        testcaseList: true
+      }
+    });
 
-    // const result = await client.execute('javascript', 'console.log(JSON.stringify([...Array(10)].map((x, i) => i)))');
+    if(!problem) {
+      throw new BadRequestException("Problem does not exist");
+    }
+
+    // TODO: refactor
+    const report = [];
+    let overallScore = 0;
+    for (let testcase of problem.testcaseList) {
+      const result = await this.pistonClient.execute(data.language, data.code, {
+        stdin: testcase.input,
+      });
+
+      console.info("Piston Outcome:", result)
+      const outcomeStdout = result.run.stdout.trim();
+
+      report.push({
+        score: testcase.score * +(testcase.expectedOutput === outcomeStdout),
+        stdout: outcomeStdout,
+        outcome: testcase.expectedOutput === outcomeStdout
+      }); 
+      
+      overallScore += testcase.score * +(testcase.expectedOutput === outcomeStdout);
+    }
 
     try {
+      data.report = JSON.stringify(report);
+      data.score =  overallScore;
+
       const submitment = await this.prisma.submitment.create({
         data: data,
       });

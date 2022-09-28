@@ -9,6 +9,13 @@ export class SubmitmentDto {
   @IsNotEmpty()
   language: string;
 
+  @IsOptional()
+  report: string;
+
+  @IsOptional()
+  @IsNumber()
+  score: number;
+
   @IsNumber()
   @IsPositive()
   @IsOptional()

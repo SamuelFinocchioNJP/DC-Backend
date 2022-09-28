@@ -16,6 +16,8 @@ CREATE TABLE "submitment" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "code" TEXT NOT NULL,
+    "report" JSONB NOT NULL DEFAULT '[]',
+    "score" INTEGER NOT NULL DEFAULT 0,
     "language" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
     "problemId" INTEGER NOT NULL,

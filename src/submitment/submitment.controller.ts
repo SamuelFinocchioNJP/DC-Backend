@@ -14,16 +14,19 @@ export class SubmitmentController {
     return await this.submitmentService.create(dto);
   }
 
+  @UseGuards(AuthGuard('passport-jwt'))
   @Get()
   async findAll() {
     return await this.submitmentService.findMany();
   }
 
+  @UseGuards(AuthGuard('passport-jwt'))
   @Get(':id')
   async findOne(@Param('id') id: number) {
     return await this.submitmentService.findOne(+id);
   }
 
+  @UseGuards(AuthGuard('passport-jwt'))
   @Delete(':id')
   async delete(@Param('id') id: number) {
     return await this.submitmentService.delete(+id);
