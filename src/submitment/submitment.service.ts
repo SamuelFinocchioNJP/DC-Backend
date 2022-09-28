@@ -58,7 +58,7 @@ export class SubmitmentService {
     }
 
     try {
-      data.report = JSON.stringify(report);
+      data.report = report;
       data.score = overallScore;
 
       const submitment = await this.prisma.submitment.create({

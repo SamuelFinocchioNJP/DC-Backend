@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from "class-validator";
 
 export class SubmitmentDto {
   @IsString()
@@ -9,8 +9,9 @@ export class SubmitmentDto {
   @IsNotEmpty()
   language: string;
 
+  @IsArray()
   @IsOptional()
-  report: string;
+  report: string[];
 
   @IsOptional()
   @IsNumber()
