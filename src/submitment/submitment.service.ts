@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { SubmitmentDto } from './data-transfer-objects';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 
 @Injectable({})
 export class SubmitmentService {
@@ -14,15 +15,22 @@ export class SubmitmentService {
 
     // const result = await client.execute('javascript', 'console.log(JSON.stringify([...Array(10)].map((x, i) => i)))');
 
-    const submitment = await this.prisma.submitment.create({
-      data: data,
-    });
+    try {
+      const submitment = await this.prisma.submitment.create({
+        data: data,
+      });
 
-    return {
-      message: 'Submitment created successfully',
-      data: submitment,
-      statusCode: 201,
-    };
+      return {
+        message: 'Submitment created successfully',
+        data: submitment,
+        statusCode: 201,
+      };
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError)
+        throw new UnprocessableEntityException(error.code);
+    }
+
+    throw new InternalServerErrorException("Unhandled error");
   }
 
   async findMany() {

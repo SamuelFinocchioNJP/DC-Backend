@@ -1,21 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { ProblemDto } from './data-transfer-objects';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 
 @Injectable({})
 export class ProblemService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(data: ProblemDto) {
-    const problem = await this.prisma.problem.create({
-      data: data,
-    });
 
-    return {
-      message: 'Problem created successfully',
-      data: problem,
-      statusCode: 201,
-    };
+    try {
+      const problem = await this.prisma.problem.create({
+        data: data,
+      });
+
+      return {
+        message: 'Problem created successfully',
+        data: problem,
+        statusCode: 201,
+      };
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError)
+        throw new UnprocessableEntityException(error.code);
+    }
+
+    throw new InternalServerErrorException("Unhandled error");
+
+
   }
 
   async findMany() {
@@ -30,7 +41,7 @@ export class ProblemService {
       }
     });
 
-    if(!problem) {
+    if (!problem) {
       throw new NotFoundException('Problem does not exist');
     }
 

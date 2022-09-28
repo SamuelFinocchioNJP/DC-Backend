@@ -5,27 +5,27 @@ import { SubmitmentService } from "./submitment.service";
 
 @Controller('submitments')
 export class SubmitmentController {
-  constructor (private testcaseService: SubmitmentService) {}
+  constructor (private submitmentService: SubmitmentService) {}
 
   @UseGuards(AuthGuard('passport-jwt'))
   @Post()
   async create(@Body() dto: SubmitmentDto, @Request() req) {
     dto.userId = req.user.sub;
-    return await this.testcaseService.create(dto);
+    return await this.submitmentService.create(dto);
   }
 
   @Get()
   async findAll() {
-    return await this.testcaseService.findMany();
+    return await this.submitmentService.findMany();
   }
 
   @Get(':id')
   async findOne(@Param('id') id: number) {
-    return await this.testcaseService.findOne(+id);
+    return await this.submitmentService.findOne(+id);
   }
 
   @Delete(':id')
   async delete(@Param('id') id: number) {
-    return await this.testcaseService.delete(+id);
+    return await this.submitmentService.delete(+id);
   }
 }

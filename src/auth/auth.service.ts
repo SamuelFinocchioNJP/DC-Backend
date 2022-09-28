@@ -1,9 +1,10 @@
-import { ForbiddenException, Injectable, PreconditionFailedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, InternalServerErrorException, PreconditionFailedException, UnprocessableEntityException } from '@nestjs/common';
 import * as argon from 'argon2';
 import { SignInDto, SignUpDto } from './data-transfer-objects';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 
 @Injectable({})
 export class AuthService {
@@ -34,21 +35,29 @@ export class AuthService {
     }
 
     const hash = await argon.hash(userData.password);
-    const user = await this.prisma.user.create({
-      data: {
-        username: userData.username,
-        email: userData.email.toLowerCase(),
-        hash: hash,
-      },
-    });
 
-    delete user.hash;
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          username: userData.username,
+          email: userData.email.toLowerCase(),
+          hash: hash,
+        },
+      });
 
-    return {
-      message: 'Registration success',
-      statusCode: 200,
-      data: user,
-    };
+      delete user.hash;
+
+      return {
+        message: 'Registration success',
+        statusCode: 200,
+        data: user,
+      };
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError)
+        throw new UnprocessableEntityException(error.code);
+    }
+
+    throw new InternalServerErrorException("Unhandled error");
   }
 
   async signIn(userData: SignInDto) {
@@ -67,7 +76,7 @@ export class AuthService {
       userData.password
     );
 
-    if(!passwordMatch) {
+    if (!passwordMatch) {
       throw new ForbiddenException('Incorrect password');
     }
 
